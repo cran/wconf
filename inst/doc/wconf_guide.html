@@ -1,0 +1,632 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Alexandru Monahov" />
+
+<meta name="date" content="2023-12-12" />
+
+<title>wconf: Weighted Confusion Matrix</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">wconf: Weighted Confusion Matrix</h1>
+<h4 class="author">Alexandru Monahov</h4>
+<h4 class="date">2023-12-12</h4>
+
+
+
+<div id="the-wconf-package" class="section level2">
+<h2>The wconf package</h2>
+<p><strong>wconf is a package that allows users to create weighted
+confusion matrices and accuracy scores</strong></p>
+<p>Used to improve the model selection process, the package includes
+several weighting schemes which can be parameterized, as well as the
+option for custom weight configurations. Furthermore, users can decide
+whether they wish to positively or negatively affect the accuracy score
+as a result of applying weights to the confusion matrix. “wconf”
+integrates with the “caret” package, but it can also work standalone
+when provided data in matrix form.</p>
+<div id="about-confusion-matrices" class="section level4">
+<h4><strong>About confusion matrices</strong></h4>
+<p>Confusion matrices are used to visualize the performance of
+classification models in tabular format. A confusion matrix takes the
+form of an “n x n” matrix depicting:</p>
+<ol style="list-style-type: lower-alpha">
+<li><p>the reference category, in columns;</p></li>
+<li><p>the predicted category, in rows;</p></li>
+<li><p>the number of observation corresponding to each combination of
+“reference - predicted” category couples, as cells of the
+matrix.</p></li>
+</ol>
+<p>Visually, the simplest binary classification confusion matrix takes
+on the form:</p>
+<p><span class="math display">\[
+A = \begin{bmatrix}TP &amp; FP \\FN &amp; TN\\ \end{bmatrix}
+\]</span> where:</p>
+<p><span class="math inline">\(TP\)</span> - True Positives - the number
+of observations that were “positive” and were correctly predicted as
+being “positive”</p>
+<p><span class="math inline">\(TN\)</span> - True Negatives - the number
+of originally “negative” observations that were correctly predicted by
+the model as being “negative”.</p>
+<p><span class="math inline">\(FP\)</span> - False Positives - also
+called “Type 1 Error” - represents observations that are in fact
+“negative”, but were incorrectly classified by the model as being
+“positive”.</p>
+<p><span class="math inline">\(FN\)</span> - False Negatives - also
+called “Type 2 Error” - represents observations that are in fact
+“positive”, but were incorrectly classified by the model as being
+“negative”.</p>
+<p>The traditional accuracy metric is compiled by adding the true
+positives and true negatives, and dividing them by the total number of
+observations.</p>
+<p><span class="math display">\[
+A = \frac{TP + TN} {N}
+\]</span></p>
+<p>A weighted confusion matrix consists in attributing weights to all
+classification categories based on their distance from the correctly
+predicted category. This is important for multi-category classification
+problems (where there are three or more categories), where distance from
+the correctly predicted category matters.</p>
+<p>The weighted confusion matrix, for the simple binary classification,
+takes the form:</p>
+<p><span class="math display">\[
+A = \begin{bmatrix}w1*TP &amp; w2*FP \\w2*FN &amp; w1*TN\\ \end{bmatrix}
+\]</span></p>
+<p>In the case of the weighted confusion matrix, a weighted accuracy
+score can be calculated by summing up all of the elements of the matrix
+and dividing the resulting amount by the number of observations.</p>
+<p><span class="math display">\[
+A = \frac{w1*TP + w2*FP + w2*FN + w1*TN} {N}
+\]</span></p>
+</div>
+<div id="references" class="section level4">
+<h4><strong>References</strong></h4>
+<p>For more details on the method, see the paper:</p>
+<p>Monahov, A. (2023). wconf: The weighted confusion matrix and accuracy
+scores package for R</p>
+</div>
+</div>
+<div id="functions" class="section level2">
+<h2>Functions</h2>
+<div id="weightmatrix---configure-and-visualize-a-weight-matrix" class="section level4">
+<h4><strong>weightmatrix - configure and visualize a weight
+matrix</strong></h4>
+<p>This function compiles a weight matrix according to one of several
+weighting schemas and allows users to visualize the impact of the weight
+matrix on each element of the confusion matrix.</p>
+<p>In R, simply call the function:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="fu">weightmatrix</span>(n, <span class="at">weight.type =</span> <span class="st">&quot;arithmetic&quot;</span>, <span class="at">weight.penalty =</span> <span class="cn">FALSE</span>, <span class="at">standard.deviation =</span> <span class="dv">2</span>, <span class="at">geometric.multiplier =</span> <span class="dv">2</span>, <span class="at">interval.high=</span><span class="dv">1</span>, <span class="at">interval.low =</span> <span class="sc">-</span><span class="dv">1</span>, <span class="at">custom.weights =</span> <span class="cn">NA</span>, <span class="at">plot.weights =</span> <span class="cn">FALSE</span>) {</span></code></pre></div>
+<p>The function takes as input:</p>
+<p><em>n</em> – the number of classes contained in the confusion
+matrix.</p>
+<p><em>weight.type</em> – the weighting schema to be used. Can be one
+of: “arithmetic” - a decreasing arithmetic progression weighting scheme,
+“geometric” - a decreasing geometric progression weighting scheme,
+“normal” - weights drawn from the right tail of a normal distribution,
+“interval” - weights contained on a user-defined interval, “custom” -
+custom weight vector defined by the user.</p>
+<p><em>weight.penalty</em> – determines whether the weights associated
+with non-diagonal elements generated by the “normal”, “arithmetic” and
+“geometric” weight types are positive or negative values. By default,
+the value is set to FALSE, which means that generated weights will be
+positive values.</p>
+<p><em>standard.deviation</em> – standard deviation of the normal
+distribution, if the normal distribution weighting schema is used.</p>
+<p><em>geometric.multiplier</em> – the multiplier used to construct the
+geometric progression series, if the geometric progression weighting
+scheme is used.</p>
+<p><em>interval.high</em> – the upper bound of the weight interval, if
+the interval weighting scheme is used.</p>
+<p><em>interval.low</em> – the lower bound of the weight interval, if
+the interval weighting scheme is used.</p>
+<p><em>custom.weights</em> – the vector of custom weights to be applied,
+is the custom weighting scheme was selected. The vector should be equal
+to “n”, but can be larger, with excess values being ignored.</p>
+<p><em>plot.weights</em> – optional setting to enable plotting of weight
+vector, corresponding to the first column of the weight matrix</p>
+<p>The function outputs a matrix:</p>
+<table>
+<tbody>
+<tr class="odd">
+<td>w</td>
+<td>the nxn weight matrix.</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="wconfusionmatrix---compute-a-weighted-confusion-matrix" class="section level4">
+<h4><strong>wconfusionmatrix - compute a weighted confusion
+matrix</strong></h4>
+<p>This function calculates the weighted confusion matrix by
+multiplying, element-by-element, a weight matrix with a supplied
+confusion matrix object.</p>
+<p>In R, simply call the function:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">wconfusionmatrix</span>(m, <span class="at">weight.type =</span> <span class="st">&quot;arithmetic&quot;</span>, <span class="at">weight.penalty =</span> <span class="cn">FALSE</span>, <span class="at">standard.deviation =</span> <span class="dv">2</span>, <span class="at">geometric.multiplier =</span> <span class="dv">2</span>, <span class="at">interval.high=</span><span class="dv">1</span>, <span class="at">interval.low =</span> <span class="sc">-</span><span class="dv">1</span>, <span class="at">custom.weights =</span> <span class="cn">NA</span>, <span class="at">print.weighted.accuracy =</span> <span class="cn">FALSE</span>) {</span></code></pre></div>
+<p>The function takes as input:</p>
+<p><em>m</em> – the caret confusion matrix object or simple matrix.</p>
+<p><em>weight.type</em> – the weighting schema to be used. Can be one
+of: “arithmetic” - a decreasing arithmetic progression weighting scheme,
+“geometric” - a decreasing geometric progression weighting scheme,
+“normal” - weights drawn from the right tail of a normal distribution,
+“interval” - weights contained on a user-defined interval, “custom” -
+custom weight vector defined by the user.</p>
+<p><em>weight.penalty</em> – determines whether the weights associated
+with non-diagonal elements generated by the “normal”, “arithmetic” and
+“geometric” weight types are positive or negative values. By default,
+the value is set to FALSE, which means that generated weights will be
+positive values.</p>
+<p><em>standard.deviation</em> – standard deviation of the normal
+distribution, if the normal distribution weighting schema is used.</p>
+<p><em>geometric.multiplier</em> – the multiplier used to construct the
+geometric progression series, if the geometric progression weighting
+scheme is used.</p>
+<p><em>interval.high</em> – the upper bound of the weight interval, if
+the interval weighting scheme is used.</p>
+<p><em>interval.low</em> – the lower bound of the weight interval, if
+the interval weighting scheme is used.</p>
+<p><em>custom.weights</em> – the vector of custom weights to be applied,
+is the custom weighting scheme was selected. The vector should be equal
+to “n”, but can be larger, with excess values being ignored.</p>
+<p><em>print.weighted.accuracy</em> – optional setting to print the
+weighted accuracy metric, which represents the sum of all weighted
+confusion matrix cells divided by the total number of observations.</p>
+<p>The function outputs a matrix:</p>
+<table>
+<tbody>
+<tr class="odd">
+<td>w_m</td>
+<td>the nxn weighted confusion matrix.</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<div id="examples" class="section level2">
+<h2>Examples</h2>
+<div id="producing-a-weighted-confusion-matrix-in-conjunction-with-the-caret-package" class="section level4">
+<h4><strong>Producing a weighted confusion matrix in conjunction with
+the caret package</strong></h4>
+<p>This example provides a real-world usage example of the wconf package
+on the Iris dataset included in R.</p>
+<p>We will attempt the more difficult task of predicting petal length
+from sepal width. In addition, for this task, we are only given
+categorical information about the length of the petals, specifically
+that they are:</p>
+<ul>
+<li><p>“Short (length between: 1-3)”</p></li>
+<li><p>“Medium (length between: 3-5 cm)”</p></li>
+<li><p>“Long (length between: 5-7 cm)”.</p></li>
+</ul>
+<p>Numeric data is available for the sepal width.</p>
+<p>Using caret, we train a multinomial logistic regression model to fit
+the numeric sepal width onto our categorical petal length data. We run
+10-fold cross-validation, repeated 3 times to avoid overfitting and find
+optimal regression coefficient values for various data
+configurations.</p>
+<p>Finally, we extract the confusion matrix. We wish to weigh the
+confusion matrix to represent preference for observations fitted closer
+to the correct value. We would like to assign some degree of positive
+value to observations that are incorrectly classified, but are close to
+the correct category. Since our categories are equally spaced, we can
+use an arithmetic weighing scheme.</p>
+<p>Let’s first visualize what this weighting schema would look like:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># View the weight matrix and plot for a 3-category classification problem, using the arithmetic sequence option.</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="fu">weightmatrix</span>(<span class="dv">3</span>, <span class="at">weight.type =</span> <span class="st">&quot;arithmetic&quot;</span>, <span class="at">plot.weights =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Error in weightmatrix(3, weight.type = &quot;arithmetic&quot;, plot.weights = TRUE): could not find function &quot;weightmatrix&quot;</span></span></code></pre></div>
+<p>To obtain the weighted confusion matrix, we run the
+“wconfusionmatrix” command and provide it the confusion matrix object
+generated by caret, a weighting scheme and, optionally, parameterize it
+to suit our objectives. Using the “wconfusionmatrix” function will
+automatically determine the dimensions of the weighing matrix and the
+user need only specify the parameters associated with their weighting
+scheme of choice.</p>
+<p>The following block of code produces the weighted confusion matrix,
+to out specifications.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Load libraries and perform transformations</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(caret)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Warning: package &#39;caret&#39; was built under R version 4.2.3</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Loading required package: ggplot2</span></span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Warning: package &#39;ggplot2&#39; was built under R version 4.2.3</span></span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Loading required package: lattice</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Warning: package &#39;lattice&#39; was built under R version 4.2.3</span></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a><span class="fu">data</span>(iris)</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>iris<span class="sc">$</span>Petal.Length.Cat <span class="ot">=</span> <span class="fu">cut</span>(iris<span class="sc">$</span>Petal.Length, <span class="at">breaks=</span><span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">5</span>, <span class="dv">7</span>), <span class="at">right =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a><span class="co"># Train multinomial logistic regression model using caret</span></span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>control <span class="ot">&lt;-</span> <span class="fu">trainControl</span>(<span class="at">method=</span><span class="st">&quot;repeatedcv&quot;</span>, <span class="at">number=</span><span class="dv">10</span>, <span class="at">repeats=</span><span class="dv">3</span>)</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>model <span class="ot">&lt;-</span> <span class="fu">train</span>(Petal.Length.Cat <span class="sc">~</span> Sepal.Width, <span class="at">data=</span>iris, <span class="at">method=</span><span class="st">&quot;multinom&quot;</span>, <span class="at">trace =</span> <span class="cn">FALSE</span>, <span class="at">trControl=</span>control)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract original data, predicted values and place them in a table</span></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>y <span class="ot">=</span> iris<span class="sc">$</span>Petal.Length.Cat</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>yhat <span class="ot">=</span> <span class="fu">predict</span>(model)</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>preds <span class="ot">=</span> <span class="fu">table</span>(<span class="at">data=</span>yhat, <span class="at">reference=</span>y)</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a><span class="co"># Construct the confusion matrix</span></span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>confmat <span class="ot">=</span> <span class="fu">confusionMatrix</span>(preds)</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a><span class="co"># Compute the weighted confusion matrix and display the weighted accuracy score</span></span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a><span class="fu">wconfusionmatrix</span>(confmat, <span class="at">weight.type =</span> <span class="st">&quot;arithmetic&quot;</span>, <span class="at">print.weighted.accuracy =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Error in wconfusionmatrix(confmat, weight.type = &quot;arithmetic&quot;, print.weighted.accuracy = TRUE): could not find function &quot;wconfusionmatrix&quot;</span></span></code></pre></div>
+</div>
+</div>
+<div id="about-the-author" class="section level2">
+<h2>About the author</h2>
+<p>The wconf: Weighted Confusion Matrix package was programmed by Dr.
+Alexandru Monahov.</p>
+<p>Alexandru Monahov holds a PhD in Economics from the University Cote
+d’Azur (Nice, France) and a Professional Certificate in Advanced Risk
+Management from the New York Institute of Finance (New York, United
+States). His Master’s Degree in International Economics and Finance and
+his Bachelor’s Degree in Economics and Business Administration were
+completed at the University of Nice (Nice, France).</p>
+<p>His professional activity includes working for the Bank of England as
+a Research Economist and as Expert Consultant at the National Bank of
+Moldova, within the Financial Stability Division. Alexandru also
+provides training for professionals in finance from Central Banks and
+Ministries of Finance at the Center of Excellence in Finance (Ljubljana,
+Slovenia) and the Centre for Central Banking Studies (London, UK).
+Previously, he worked as assistant and, subsequently, associate
+professor at the University of Nice and IAE in France, where he taught
+Finance, Economics, Econometrics and Business Administration. He
+developed training and professional education curricula for the Chambers
+of Commerce and Industry and directed several continuing education
+programs.</p>
+<p>Dr. Monahov was awarded funding for continuing professional education
+by the World Bank through the Reserve Advisory &amp; Management
+Partnership Program, a PhD scholarship by the Doctoral School of Nice
+and a scholarship of the French Government.</p>
+<p>⠀</p>
+<pre><code>Copyright Alexandru Monahov, 2023.
+
+You may use, modify and redistribute this code, provided that you give credit to the author and make any derivative work available to the public for free.</code></pre>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>

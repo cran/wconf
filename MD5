@@ -1,0 +1,17 @@
+8498588a1b1fdf9c25e8aea711354379 *DESCRIPTION
+e234a92fb38df634b0cdbdf96fd565e0 *NAMESPACE
+6082aa275fd0ec1ab32cad8afe5f8f55 *NEWS.md
+86f0df3cc533338fe5f3b359f136bf34 *R/wconf-package.R
+c49f25ae791a5af04ba0f13d480801c6 *R/wconfusionmatrix.R
+6063913bbacc36fe970ca989579b5dac *R/weightmatrix.R
+d112d964823cf3600e361bf4e48f1a8d *README.md
+cb4924f3573383fca290a0a8e2ca5294 *build/partial.rdb
+302e7cd43f41034bde0af9fce2a8010a *build/vignette.rds
+ed2579fed711dce07ce5988d997cc645 *inst/doc/wconf_guide.R
+093fc2fea439dc03076947a84962bf05 *inst/doc/wconf_guide.Rmd
+9f162c9fc97bbe39e22207ab847d9752 *inst/doc/wconf_guide.html
+c8ced71ae056b0173c84fc97b3aec610 *man/figures/logo.png
+e93585b3425ff332d32874b9471b661b *man/wconf-package.Rd
+64c1569da03d5eb1b63aa19d33243c20 *man/wconfusionmatrix.Rd
+a1d5cb300e4d4ecc6413619317681071 *man/weightmatrix.Rd
+093fc2fea439dc03076947a84962bf05 *vignettes/wconf_guide.Rmd
