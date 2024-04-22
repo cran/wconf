@@ -6,6 +6,9 @@ knitr::opts_chunk$set(
 )
 
 ## -----------------------------------------------------------------------------
+library(wconf)
+
+## -----------------------------------------------------------------------------
 # View the weight matrix and plot for a 3-category classification problem, using the arithmetic sequence option.
 
 weightmatrix(3, weight.type = "arithmetic", plot.weights = TRUE)
@@ -31,4 +34,36 @@ confmat = confusionMatrix(preds)
 
 # Compute the weighted confusion matrix and display the weighted accuracy score
 wconfusionmatrix(confmat, weight.type = "arithmetic", print.weighted.accuracy = TRUE)
+
+## ----echo=FALSE---------------------------------------------------------------
+mtx = t(matrix(
+  c(50, 0, 118, 5,
+    0,  1,  45, 27,
+    0, 84,  22, 1,
+    0, 22,  57, 4),
+  nrow = 4))
+
+## -----------------------------------------------------------------------------
+balancedaccuracy(mtx)
+
+## -----------------------------------------------------------------------------
+mtx = t(matrix(
+  c(50, 0, 118, 5,
+    0, 1, 45, 27,
+    0, 84, 22, 1,
+    0, 22, 57, 70),
+  nrow = 4))
+
+balancedaccuracy(mtx)
+
+## ----echo=FALSE---------------------------------------------------------------
+mtx = t(matrix(
+  c(5000, 0, 118, 5,
+    0,  1,  45, 27,
+    0, 84,  22, 1,
+    0, 22,  57, 4),
+  nrow = 4))
+
+## -----------------------------------------------------------------------------
+balancedaccuracy(mtx)
 

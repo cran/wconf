@@ -9,6 +9,8 @@ wconfusionmatrix(m, weight.type = "arithmetic",
                         standard.deviation = 2,
                         geometric.multiplier = 2,
                         interval.high=1, interval.low = -1,
+                        sin.high=1.5*pi, sin.low = 0.5*pi,
+                        tanh.decay = 3,
                         custom.weights = NA,
                         print.weighted.accuracy = FALSE)
 }
@@ -20,6 +22,8 @@ wconfusionmatrix(m, weight.type = "arithmetic",
 "geometric" - a decreasing geometric progression weighting scheme,
 "normal" - weights drawn from the right tail of a normal distribution,
 "interval" - weights contained on a user-defined interval,
+"sin" - a weighing scheme based on a sine function,
+"tanh" - a weighing scheme based on a hyperbolic tangent function,
 "custom" - custom weight vector defined by the user.}
 
 \item{weight.penalty}{determines whether the weights associated with
@@ -38,6 +42,16 @@ weighting scheme is used.}
 
 \item{interval.low}{the lower bound of the weight interval, if the interval
 weighting scheme is used.}
+
+\item{sin.high}{the upper segment of the sine function to be used in the
+weighting scheme.}
+
+\item{sin.low}{the lower segment of the sine function to be used in the
+weighting scheme.}
+
+\item{tanh.decay}{the decay factor of the hyperbolic tangent weighing
+function. Higher values increase the rate of decay and place less weight on
+observations farther away from the correctly predicted category.}
 
 \item{custom.weights}{the vector of custom weight sto be applied, is the
 custom weighting scheme wasd selected. The vector should be equal to "n", but
@@ -64,12 +78,15 @@ wconfusionmatrix(m, weight.type="arithmetic", print.weighted.accuracy = TRUE)
 wconfusionmatrix(m, weight.type="geometric", print.weighted.accuracy = TRUE)
 wconfusionmatrix(m, weight.type="interval", print.weighted.accuracy = TRUE)
 wconfusionmatrix(m, weight.type="normal", print.weighted.accuracy = TRUE)
+wconfusionmatrix(m, weight.type="sin", print.weighted.accuracy = TRUE)
+wconfusionmatrix(m, weight.type="tanh", print.weighted.accuracy = TRUE)
 wconfusionmatrix(m, weight.type= "custom", custom.weights = c(1,0.1,0),
                  print.weighted.accuracy = TRUE)
 
 }
 \seealso{
-[weightmatrix()]
+[weightmatrix()] for the weight matrix used in computations,
+  [balancedaccuracy()] for accuracy metrics designed for imbalanced data.
 }
 \author{
 Alexandru Monahov, <https://www.alexandrumonahov.eu.org/>

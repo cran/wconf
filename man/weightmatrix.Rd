@@ -7,7 +7,9 @@
 weightmatrix(n, weight.type = "arithmetic", weight.penalty = FALSE,
                     standard.deviation = 2,
                     geometric.multiplier = 2,
-                    interval.high=1, interval.low = -1,
+                    interval.high = 1, interval.low = -1,
+                    sin.high = 1.5 * pi, sin.low = 0.5 * pi,
+                    tanh.decay = 3,
                     custom.weights = NA,
                     plot.weights = FALSE)
 }
@@ -19,6 +21,8 @@ weightmatrix(n, weight.type = "arithmetic", weight.penalty = FALSE,
 "geometric" - a decreasing geometric progression weighting scheme,
 "normal" - weights drawn from the right tail of a normal distribution,
 "interval" - weights contained on a user-defined interval,
+"sin" - a weighing scheme based on a sine function,
+"tanh" - a weighing scheme based on a hyperbolic tangent function,
 "custom" - custom weight vector defined by the user.}
 
 \item{weight.penalty}{determines whether the weights associated with
@@ -37,6 +41,16 @@ weighting scheme is used.}
 
 \item{interval.low}{the lower bound of the weight interval, if the interval
 weighting scheme is used.}
+
+\item{sin.high}{the upper segment of the sine function to be used in the
+weighting scheme.}
+
+\item{sin.low}{the lower segment of the sine function to be used in the
+weighting scheme.}
+
+\item{tanh.decay}{the decay factor of the hyperbolic tangent weighing
+function. Higher values increase the rate of decay and place less weight on
+observations farther away from the correctly predicted category.}
 
 \item{custom.weights}{the vector of custom weights to be applied, is the
 custom weighting scheme was selected. The vector should be equal to "n", but
@@ -60,12 +74,15 @@ The number of categories "n" should be greater or equal to 2.
 \examples{
 weightmatrix(n=4, weight.type="arithmetic", plot.weights = TRUE)
 weightmatrix(n=4, weight.type="normal", standard.deviation = 1,
-                  plot.weights = TRUE)
+             plot.weights = TRUE)
 weightmatrix(n=4, weight.type="interval", interval.high = 1,
-                  interval.low = -0.5, plot.weights = TRUE)
+             interval.low = -0.5, plot.weights = TRUE)
 weightmatrix(n=4, weight.type="geometric", geometric.multiplier = 0.6)
+weightmatrix(n=10, weight.type="sin", sin.low = 0, sin.high = pi,
+             plot.weights = TRUE)
+weightmatrix(n=10, weight.type="tanh", tanh.decay = 5, plot.weights = TRUE)
 weightmatrix(n=4, weight.type="custom", custom.weights = c(1,0.2,0.1,0),
-                  plot.weights = TRUE)
+             plot.weights = TRUE)
 
 }
 \seealso{

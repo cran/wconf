@@ -13,7 +13,7 @@ Copyright Alexandru Monahov, 2023. You may use, modify and redistribute
 \description{
 \if{html}{\figure{logo.png}{options: style='float: right' alt='logo' width='120'}}
 
-Allows users to create weighted confusion matrices and accuracy metrics that help with the model selection process for classification problems, where distance from the correct category is important. The package includes several weighting schemes which can be parameterized, as well as custom configuration options. Furthermore, users can decide whether they wish to positively or negatively affect the accuracy score as a result of applying weights to the confusion matrix. 'wconf' integrates well with the 'caret' package, but it can also work standalone when provided data in matrix form. References: Kuhn, M. (2008) "Building Perspective Models in R Using the caret Package" \doi{10.18637/jss.v028.i05} Monahov, A. (2021) "Model Evaluation with Weighted Threshold Optimization (and the mewto R package)" \doi{10.2139/ssrn.3805911} Van de Velden, M., Iodice D'Enza, A., Markos, A., Cavicchia, C. (2023) "A general framework for implementing distances for categorical variables" \href{https://arxiv.org/abs/2301.02190v1}{arXiv:2301.02190v1}.
+Allows users to create weighted confusion matrices and accuracy metrics that help with the model selection process for classification problems, where distance from the correct category is important. The package includes several weighting schemes which can be parameterized, as well as custom configuration options. Furthermore, users can decide whether they wish to positively or negatively affect the accuracy score as a result of applying weights to the confusion matrix. Functions are included to calculate accuracy metrics for imbalanced data. Finally, 'wconf' integrates well with the 'caret' package, but it can also work standalone when provided data in matrix form. References: Kuhn, M. (2008) "Building Perspective Models in R Using the caret Package" \doi{10.18637/jss.v028.i05} Monahov, A. (2021) "Model Evaluation with Weighted Threshold Optimization (and the mewto R package)" \doi{10.2139/ssrn.3805911} Starovoitov, V., Golub, Y. (2020). New Function for Estimating Imbalanced Data Classification Results. Pattern Recognition and Image Analysis, 295–302 Van de Velden, M., Iodice D'Enza, A., Markos, A., Cavicchia, C. (2023) "A general framework for implementing distances for categorical variables" \doi{10.48550/arXiv.2301.02190}.
 }
 \details{
 weightmatrix - configures and visualizes a weight matrix
@@ -21,6 +21,9 @@ weightmatrix - configures and visualizes a weight matrix
   wconfusionmatrix - calculates the weighted confusion matrix from a caret
   ConfusionMatrix object or a simple matrix, according to one of several
   weighting schemas and optionally prints the weighted accuracy score.
+
+  balancedaccuracy - calculates classification accuracy scores for imbalanced
+  data using sine-based formulas proposed by Starovoitov and Golub (2020).
 }
 \examples{
 # Generate sample data
@@ -31,6 +34,8 @@ weightmatrix(n=4, weight.type="geometric", geometric.multiplier = 0.6)
 weightmatrix(n=4, weight.type="geometric", geometric.multiplier = 2)
 # Compute the weighted confusion matrix
 wconfusionmatrix(m, weight.type = "arithmetic", print.weighted.accuracy = TRUE)
+# Calculate accuracy metrics for imbalanced data
+balancedaccuracy(m, print.scores = TRUE)
 
 }
 \references{
@@ -39,6 +44,9 @@ Package. Journal of Statistical Software, 28(5), 1-26.
 
 Monahov, A. (2021). Model Evaluation with Weighted Threshold Optimization
 (and the "mewto" R package), Machine Learning eJournal, SSRN.
+
+Starovoitov, V., Golub, Y. (2020). New Function for Estimating Imbalanced
+Data Classification Results. Pattern Recognition and Image Analysis, 295–302.
 
 Van de Velden, M. et al. (2023). A general framework for implementing
 distances for categorical variables. arXiv.

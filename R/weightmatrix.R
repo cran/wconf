@@ -11,6 +11,8 @@
 #' "geometric" - a decreasing geometric progression weighting scheme,
 #' "normal" - weights drawn from the right tail of a normal distribution,
 #' "interval" - weights contained on a user-defined interval,
+#' "sin" - a weighing scheme based on a sine function,
+#' "tanh" - a weighing scheme based on a hyperbolic tangent function,
 #' "custom" - custom weight vector defined by the user.
 #'
 #' @param weight.penalty determines whether the weights associated with
@@ -23,6 +25,16 @@
 #'
 #' @param geometric.multiplier the multiplier used to construct the geometric
 #' progression series, if the geometric progression weighting scheme is used.
+#'
+#' @param sin.high the upper segment of the sine function to be used in the
+#' weighting scheme.
+#'
+#' @param sin.low the lower segment of the sine function to be used in the
+#' weighting scheme.
+#'
+#' @param tanh.decay the decay factor of the hyperbolic tangent weighing
+#' function. Higher values increase the rate of decay and place less weight on
+#' observations farther away from the correctly predicted category.
 #'
 #' @param interval.high the upper bound of the weight interval, if the interval
 #' weighting scheme is used.
@@ -45,7 +57,9 @@
 #' @usage weightmatrix(n, weight.type = "arithmetic", weight.penalty = FALSE,
 #'                     standard.deviation = 2,
 #'                     geometric.multiplier = 2,
-#'                     interval.high=1, interval.low = -1,
+#'                     interval.high = 1, interval.low = -1,
+#'                     sin.high = 1.5 * pi, sin.low = 0.5 * pi,
+#'                     tanh.decay = 3,
 #'                     custom.weights = NA,
 #'                     plot.weights = FALSE)
 #'
@@ -58,16 +72,19 @@
 #' @examples
 #' weightmatrix(n=4, weight.type="arithmetic", plot.weights = TRUE)
 #' weightmatrix(n=4, weight.type="normal", standard.deviation = 1,
-#'                   plot.weights = TRUE)
+#'              plot.weights = TRUE)
 #' weightmatrix(n=4, weight.type="interval", interval.high = 1,
-#'                   interval.low = -0.5, plot.weights = TRUE)
+#'              interval.low = -0.5, plot.weights = TRUE)
 #' weightmatrix(n=4, weight.type="geometric", geometric.multiplier = 0.6)
+#' weightmatrix(n=10, weight.type="sin", sin.low = 0, sin.high = pi,
+#'              plot.weights = TRUE)
+#' weightmatrix(n=10, weight.type="tanh", tanh.decay = 5, plot.weights = TRUE)
 #' weightmatrix(n=4, weight.type="custom", custom.weights = c(1,0.2,0.1,0),
-#'                   plot.weights = TRUE)
+#'              plot.weights = TRUE)
 #'
 #' @export
 
-weightmatrix <- function(n, weight.type = "arithmetic", weight.penalty = FALSE, standard.deviation = 2, geometric.multiplier = 2, interval.high=1, interval.low = -1, custom.weights = NA, plot.weights = FALSE) {
+weightmatrix <- function(n, weight.type = "arithmetic", weight.penalty = FALSE, standard.deviation = 2, geometric.multiplier = 2, interval.high = 1, interval.low = -1, sin.high=1.5*pi, sin.low = 0.5*pi, tanh.decay = 3, custom.weights = NA, plot.weights = FALSE) {
 
   if (weight.type == "normal") {
   # Normal distribution
@@ -136,9 +153,10 @@ weightmatrix <- function(n, weight.type = "arithmetic", weight.penalty = FALSE, 
   hi = interval.high
   lo = interval.low
   mat = (abs(outer(seq(0, (n-1), 1), seq(0, (n-1), 1), `-`)))+1
+  mat_tmp = mat
   x=seq(hi, lo, length.out = n)
   for (i in 1:n) {
-    mat[mat==i] = x[i]
+    mat[mat_tmp==i] = x[i]
   }
   if (plot.weights == TRUE) {
     plot(mat[,1], type = "l", xaxt = "n", xlab = "Category", ylab = "Weight")
@@ -146,6 +164,51 @@ weightmatrix <- function(n, weight.type = "arithmetic", weight.penalty = FALSE, 
     if (min(mat)<0) {abline(h=0, lty = "dotted")}
   }
   return(mat)
+  }
+
+  else if (weight.type == "sin") {
+    sin_hi = sin.high
+    sin_lo = sin.low
+    mat = (abs(outer(seq(0, (n-1), 1), seq(0, (n-1), 1), `-`)))+1
+    mat_tmp = mat
+    x = sin(seq(sin_lo, sin_hi, length.out = n))
+    for (i in 1:n) {
+      mat[mat_tmp==i] = x[i]
+    }
+    if (plot.weights == TRUE) {
+      plot(mat[,1], type = "l", xaxt = "n", xlab = "Category", ylab = "Weight")
+      axis(1, at = 1:length(mat[,1]))
+      if (min(mat)<0) {abline(h=0, lty = "dotted")}
+    }
+
+    cat("\n", "Suggested values of the sin.low and sin.high parameters:", "\n", "\n",
+        "sin.low = 0.5*pi; sin.high = 1.5*pi -> yields a sigmoid", "\n",
+        "sin.low = 0     ; sin.high = pi     -> yields a parabola", "\n",
+        "sin.low = 1.0*pi; sin.high = 1.5*pi -> linear descent with slow attenuation at end", "\n",
+        "sin.low = 2.5*pi; sin.high = 3.0*pi -> linear descent with slow attenuation at beginning", "\n", "\n"
+        )
+
+    return(mat)
+  }
+
+  else if (weight.type == "tanh") {
+    tanh_decay = tanh.decay # higher values mean quicker decay (less weight placed on values far away from correct classification)
+    mat = (abs(outer(seq(0, (n-1), 1), seq(0, (n-1), 1), `-`)))+1
+    mat_tmp = mat
+    x = 1-tanh(seq(0, tanh_decay, length.out = n))
+    if (weight.penalty == TRUE) {
+      x = tanh(seq(0, tanh_decay, length.out = n))
+    }
+    for (i in 1:n) {
+      mat[mat_tmp==i] = x[i]
+    }
+    if (plot.weights == TRUE) {
+      plot(mat[,1], type = "l", xaxt = "n", xlab = "Category", ylab = "Weight")
+      axis(1, at = 1:length(mat[,1]))
+      if (min(mat)<0) {abline(h=0, lty = "dotted")}
+    }
+
+    return(mat)
   }
 
   else if (weight.type == "custom") {

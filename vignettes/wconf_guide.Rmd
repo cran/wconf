@@ -114,7 +114,7 @@ matrix on each element of the confusion matrix.
 In R, simply call the function:
 
 ``` r
-weightmatrix(n, weight.type = "arithmetic", weight.penalty = FALSE, standard.deviation = 2, geometric.multiplier = 2, interval.high=1, interval.low = -1, custom.weights = NA, plot.weights = FALSE) {
+weightmatrix(n, weight.type = "arithmetic", weight.penalty = FALSE, standard.deviation = 2, geometric.multiplier = 2, interval.high=1, interval.low = -1, custom.weights = NA, plot.weights = FALSE)
 ```
 
 The function takes as input:
@@ -169,7 +169,7 @@ object.
 In R, simply call the function:
 
 ``` r
-wconfusionmatrix(m, weight.type = "arithmetic", weight.penalty = FALSE, standard.deviation = 2, geometric.multiplier = 2, interval.high=1, interval.low = -1, custom.weights = NA, print.weighted.accuracy = FALSE) {
+wconfusionmatrix(m, weight.type = "arithmetic", weight.penalty = FALSE, standard.deviation = 2, geometric.multiplier = 2, interval.high=1, interval.low = -1, custom.weights = NA, print.weighted.accuracy = FALSE)
 ```
 
 The function takes as input:
@@ -216,12 +216,44 @@ The function outputs a matrix:
 |-----|------------------------------------|
 | w_m | the nxn weighted confusion matrix. |
 
+#### **balancedaccuracy - calculate accuracy scores for imbalanced data**
+
+This function calculates classification accuracy scores using the sine-based
+formulas proposed by Starovoitov and Golub (2020). The advantage of the new
+method consists in producing improved results when compared with the standard
+balanced accuracy function, by taking into account the class distribution of
+errors. This feature renders the method useful when confronted with imbalanced
+data.
+
+In R, simply call the function:
+
+``` r
+balancedaccuracy(m, print.scores = TRUE)
+```
+
+The function takes as input:
+
+*m* -- the caret confusion matrix object or simple matrix.
+
+*print.scores* -- used to display the accuracy scores when set to TRUE.
+
+The function outputs a list of objects:
+
+|            |                             |
+|------------|-----------------------------|
+| ACCmetrics | accuracy metrics.           |
+
 ## Examples
 
 #### **Producing a weighted confusion matrix in conjunction with the caret package**
 
 This example provides a real-world usage example of the wconf package on
 the Iris dataset included in R.
+
+To load the wconf package, run the command:
+```{r}
+library(wconf)
+```
 
 We will attempt the more difficult task of predicting petal length from
 sepal width. In addition, for this task, we are only given categorical
@@ -287,6 +319,171 @@ confmat = confusionMatrix(preds)
 # Compute the weighted confusion matrix and display the weighted accuracy score
 wconfusionmatrix(confmat, weight.type = "arithmetic", print.weighted.accuracy = TRUE)
 ```
+
+#### **Generating accuracy metrics for imbalanced data**
+
+Let us now undertake an analysis of the classification performance of a model
+on imbalanced data. To do so, we will make use of the "balancedaccuracy"
+function.
+
+Consider the following example of loans classified into different categories
+of Loan-To-Value (LTV) - an indicator which tells a bank if a loan has enough
+collateral to cover against the clients' default. Lower values of the indicator
+denote safer loans.
+
+A bank's risk department has come up with a model that classifies loans into
+one of four categories, depending on the LTV band of the loan. The results are
+presented below:
+
+```{r echo=FALSE}
+mtx = t(matrix(
+  c(50, 0, 118, 5,
+    0,  1,  45, 27,
+    0, 84,  22, 1,
+    0, 22,  57, 4),
+  nrow = 4))
+```
+
+The classification categories can be interpreted in the following manner:\
+cat. 1 - loans with LTVs between 40% and 60%\
+cat. 2 - loans with LTVs between 60% and 80%\
+cat. 3 - loans with LTVs between 80% and 100%\
+cat. 4 - loans with LTVs between 100% and 120%
+
+Let's look at the correlation matrix to get an idea of how well the model
+performs.
+
+For category 1 (safest loans with an LTV ratio of 40%-60%), the model predicts
+all 50 loans that were issued correctly.
+
+For category 2 loans, only 1 loan out of 107 loans that were issued with an LTV
+ratio of 60%-80%, was correctly predicted.
+
+The performance of category 3 is also bad, as the smallest share of loans issued
+within this bucket were predicted correctly.
+
+For category 4 loans (highest risk, with LTVs above 100%), Only 4 out of 37
+of the loans belonging to this class were predicted correctly.
+
+Overall, our conclusion is that this is a very bad model at predicting 3 out of
+4 loan categories (categories 2 - 4). We therefore would want to assign a low
+score.
+
+Let's calculate the accuracy metrics of this loan using the "balancedaccuracy"
+function.
+
+```{r}
+balancedaccuracy(mtx)
+```
+
+Let's analyze the scores:
+
+SinACC - is the Starovoitov-Golub Sine-Accuracy Function
+BalACC - is the Balanced Accuracy Function
+ACC    - is the standard Accuracy Function
+
+``` r
+SinACC = 0.2557172    BalACC = 0.3020907    ACC = 0.1766055
+```
+
+For the SinACC and BalACC functions, we can also extract the per-category
+accuracy metrics, which show us how well each category was predicted.
+
+``` r
+Class accuracy metrics: 
+SinAcc 
+     [,1]        [,2]       [,3]       [,4]
+        1 6.63064e-05 0.01237203 0.01043053
+BalAcc 
+     [,1]        [,2]       [,3]      [,4]
+        1 0.009345794 0.09090909 0.1081081
+
+```
+
+We notice that, as all observations belonging to the first category were
+correctly predicted as being in the first category, both the SinACC and BalACC
+functions give it a score of 1 (or 100% correctly predicted).
+
+For the other categories, SinACC penalizes the number of incorrect predictions
+more than BalACC. As a consequence, SinAcc and BalACC per-category scores will
+only be close to each other when the number of correctly predicted cases
+significantly exceeds that of the incorrectly predicted cases.
+
+To exemplify this, consider the following case where, for the last class, the
+number of correctly predicted observations has been set to equal more than
+double the number of incorrectly predicted observations. As such mtx[4,4] = 70.
+
+```{r}
+mtx = t(matrix(
+  c(50, 0, 118, 5,
+    0, 1, 45, 27,
+    0, 84, 22, 1,
+    0, 22, 57, 70),
+  nrow = 4))
+
+balancedaccuracy(mtx)
+```
+
+In this case:
+
+``` r
+SinACC = 0.411762    BalACC = 0.4449666    ACC = 0.2848606
+
+SinAcc 
+     [,1]        [,2]       [,3]      [,4]
+        1 6.63064e-05 0.01237203 0.6346096
+BalAcc 
+     [,1]        [,2]       [,3]      [,4]
+        1 0.009345794 0.09090909 0.6796117
+```
+
+The accuracy metrics for the 4th category for SinACC and BalACC are relatively
+close to each other:
+
+``` r
+SinACC[,4] = 0.6346096    BalACC[,4] = 0.6796117
+```
+
+Notice, however, that both the SinACC and BalACC scores are invariant to the
+distance of the predicted value from the correct category. If there is value
+in assigning some positive weight to predictions classified in the vicinity of
+the correct category or, conversely, applying a supplementary penalty to
+predictions situated far away from the correct category, then you should
+consider first applying weights to the confusion matrix using the function
+"wconfusionmatrix", and then using the "balancedaccuracy" function on the
+weighted matrix.
+
+Finally, let's consider the case when there is a disproportionately large number
+of observations classified correctly in one if the categories. We assume the
+following confusion matrix, in which mtx[1,1] was changed to 5000:
+
+```{r echo=FALSE}
+mtx = t(matrix(
+  c(5000, 0, 118, 5,
+    0,  1,  45, 27,
+    0, 84,  22, 1,
+    0, 22,  57, 4),
+  nrow = 4))
+```
+
+When running the accuracy metrics, we obtain the following results.
+
+```{r}
+balancedaccuracy(mtx)
+```
+
+The standard accuracy score receives a tremendous improvement, given that it
+only considers the total number of correctly classified observations. Both the
+SinACC and BalACC scores are unaffected however. This is because, just as in the
+initial case, the first category continues to be estimated correctly in 100% of
+the predictions that the model generates for loans in this category.
+
+``` r
+SinACC = 0.2557172    BalACC = 0.3020907    ACC = 0.9333457
+```
+
+The SinACC score, remains more conservative than the BalACC, but the difference
+between the two continues to be the same.
 
 ## About the author
 

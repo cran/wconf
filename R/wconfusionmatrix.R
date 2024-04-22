@@ -11,6 +11,8 @@
 #' "geometric" - a decreasing geometric progression weighting scheme,
 #' "normal" - weights drawn from the right tail of a normal distribution,
 #' "interval" - weights contained on a user-defined interval,
+#' "sin" - a weighing scheme based on a sine function,
+#' "tanh" - a weighing scheme based on a hyperbolic tangent function,
 #' "custom" - custom weight vector defined by the user.
 #'
 #' @param weight.penalty determines whether the weights associated with
@@ -23,6 +25,16 @@
 #'
 #' @param geometric.multiplier the multiplier used to construct the geometric
 #' progression series, if the geometric progression weighting scheme is used.
+#'
+#' @param sin.high the upper segment of the sine function to be used in the
+#' weighting scheme.
+#'
+#' @param sin.low the lower segment of the sine function to be used in the
+#' weighting scheme.
+#'
+#' @param tanh.decay the decay factor of the hyperbolic tangent weighing
+#' function. Higher values increase the rate of decay and place less weight on
+#' observations farther away from the correctly predicted category.
 #'
 #' @param interval.high the upper bound of the weight interval, if the interval
 #' weighting scheme is used.
@@ -47,12 +59,15 @@
 #'                         standard.deviation = 2,
 #'                         geometric.multiplier = 2,
 #'                         interval.high=1, interval.low = -1,
+#'                         sin.high=1.5*pi, sin.low = 0.5*pi,
+#'                         tanh.decay = 3,
 #'                         custom.weights = NA,
 #'                         print.weighted.accuracy = FALSE)
 #'
 #' @keywords weighted confusion matrix accuracy score
 #'
-#' @seealso [weightmatrix()]
+#' @seealso [weightmatrix()] for the weight matrix used in computations,
+#'   [balancedaccuracy()] for accuracy metrics designed for imbalanced data.
 #'
 #' @author Alexandru Monahov, <https://www.alexandrumonahov.eu.org/>
 #'
@@ -62,12 +77,14 @@
 #' wconfusionmatrix(m, weight.type="geometric", print.weighted.accuracy = TRUE)
 #' wconfusionmatrix(m, weight.type="interval", print.weighted.accuracy = TRUE)
 #' wconfusionmatrix(m, weight.type="normal", print.weighted.accuracy = TRUE)
+#' wconfusionmatrix(m, weight.type="sin", print.weighted.accuracy = TRUE)
+#' wconfusionmatrix(m, weight.type="tanh", print.weighted.accuracy = TRUE)
 #' wconfusionmatrix(m, weight.type= "custom", custom.weights = c(1,0.1,0),
 #'                  print.weighted.accuracy = TRUE)
 #'
 #' @export
 
-wconfusionmatrix <- function(m, weight.type = "arithmetic", weight.penalty = FALSE, standard.deviation = 2, geometric.multiplier = 2, interval.high=1, interval.low = -1, custom.weights = NA, print.weighted.accuracy = FALSE) {
+wconfusionmatrix <- function(m, weight.type = "arithmetic", weight.penalty = FALSE, standard.deviation = 2, geometric.multiplier = 2, interval.high=1, interval.low = -1, sin.high=1.5*pi, sin.low = 0.5*pi, tanh.decay = 3, custom.weights = NA, print.weighted.accuracy = FALSE) {
 
   if (is.matrix(m) == FALSE) {m = as.matrix(m)}
   n = length(m[,1])
@@ -131,14 +148,49 @@ wconfusionmatrix <- function(m, weight.type = "arithmetic", weight.penalty = FAL
   return(m*mat)
   }
 
+  else if (weight.type == "sin") {
+    sin_hi = sin.high
+    sin_lo = sin.low
+    mat = (abs(outer(seq(0, (n-1), 1), seq(0, (n-1), 1), `-`)))+1
+    mat_tmp = mat
+    x = sin(seq(sin_lo, sin_hi, length.out = n))
+    for (i in 1:n) {
+      mat[mat_tmp==i] = x[i]
+    }
+    if (print.weighted.accuracy == TRUE) {
+      waccuracy = sum(m*mat)/sum(m)
+      cat("Weighted accuracy = ", sum(m*mat)/sum(m), "\n", "\n")
+    }
+    return(m*mat)
+  }
+
+  else if (weight.type == "tanh") {
+    tanh_decay = tanh.decay # higher values mean quicker decay (less weight placed on values far away from correct classification)
+    mat = (abs(outer(seq(0, (n-1), 1), seq(0, (n-1), 1), `-`)))+1
+    mat_tmp = mat
+    x = 1-tanh(seq(0, tanh_decay, length.out = n))
+    if (weight.penalty == TRUE) {
+      x = tanh(seq(0, tanh_decay, length.out = n))
+    }
+    for (i in 1:n) {
+      mat[mat_tmp==i] = x[i]
+    }
+    if (print.weighted.accuracy == TRUE) {
+      waccuracy = sum(m*mat)/sum(m)
+      cat("Weighted accuracy = ", sum(m*mat)/sum(m), "\n", "\n")
+    }
+    return(m*mat)
+  }
+
   else if (weight.type == "interval") {
   # Interval weight
   hi = interval.high
   lo = interval.low
   mat = (abs(outer(seq(0, (n-1), 1), seq(0, (n-1), 1), `-`)))+1
+  mat_tmp = mat
   x=seq(hi, lo, length.out = n)
   for (i in 1:n) {
-    mat[mat==i] = x[i]
+    mat[mat_tmp==i] = x[i]
   }
   if (print.weighted.accuracy == TRUE) {
     waccuracy = sum(m*mat)/sum(m)

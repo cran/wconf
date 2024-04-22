@@ -8,9 +8,13 @@ The package includes several weighting schemes which can be parameterized, as we
 
 Applying a weighting scheme to the confusion matrix can be useful in applications such as performance evaluation, where characteristics such as "underperforming", "acceptable", "overperforming" and "worker of the year" may represent gradations that are far apart and unevenly spaced. Similarly, where the objective is to classify geographic regions and proximity of the prediction to the actual region constitutes an advantage in terms of the model’s performance, applying a weighting scheme facilitates the model selection process.
 
+Functions are included to calculate accuracy metrics for imbalanced data. Specifically, the package
+allows users to compute the Starovoitov-Golub sine-accuracy function, as well as the Balanced Accuracy
+Function and the standard Accuracy indicator.
+
 ### [Paper (ResearchGate)](http://dx.doi.org/10.13140/RG.2.2.15992.83207)
 
-### v1.0.0
+### v1.1.0
 
 ## About wconf
 
@@ -71,6 +75,22 @@ _interval.low_	–	the lower bound of the weight interval, if the interval weigh
 _custom.weights_ – the vector of custom weights to be applied, is the custom weighting scheme was selected. The vector should be equal to "n", but can be larger, with excess values being ignored.
 
 _print.weighted.accuracy_ – optional setting to print the weighted accuracy metric, which represents the sum of all weighted confusion matrix cells divided by the total number of observations.
+
+### balancedaccuracy - calculate accuracy scores for imbalanced data
+This function calculates classification accuracy scores using the sine-based
+formulas proposed by Starovoitov and Golub (2020). The advantage of the new
+method consists in producing improved results when compared with the standard
+balanced accuracy function, by taking into account the class distribution of
+errors. This feature renders the method useful when confronted with imbalanced
+data.
+
+**balancedaccuracy(_m_, _print.scores_)**
+
+The function takes as input:
+
+_m_ - the caret confusion matrix object or simple matrix.
+
+_print.scores_ - used to display the accuracy scores when set to TRUE.
 
 ## Technical details
 
