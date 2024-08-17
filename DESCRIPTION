@@ -1,7 +1,7 @@
 Package: wconf
 Type: Package
 Title: Weighted Confusion Matrix
-Version: 1.1.0
+Version: 1.2.0
 Authors@R: person(given = "Alexandru",
            family = "Monahov",
            role = c("aut", "cre", "cph"),
@@ -23,6 +23,9 @@ Description: Allows users to create weighted confusion matrices and accuracy
     <doi:10.18637/jss.v028.i05>
     Monahov, A. (2021) "Model Evaluation with Weighted Threshold Optimization
     (and the mewto R package)" <doi:10.2139/ssrn.3805911>
+    Monahov, A. (2024) "Improved Accuracy Metrics for Classification with
+    Imbalanced Data and Where Distance from the Truth Matters, with the wconf R
+    Package" <doi:10.2139/ssrn.4802336>
     Starovoitov, V., Golub, Y. (2020). New Function for Estimating Imbalanced
     Data Classification Results. Pattern Recognition and Image Analysis, 295–302
     Van de Velden, M., Iodice D'Enza, A., Markos, A., Cavicchia, C. (2023)
@@ -34,9 +37,9 @@ RoxygenNote: 7.2.3
 Suggests: knitr, rmarkdown, caret
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2024-04-22 22:33:50 UTC; Admin
+Packaged: 2024-08-17 15:01:43 UTC; Admin
 Author: Alexandru Monahov [aut, cre, cph]
     (<https://orcid.org/0000-0001-6204-9131>)
 Maintainer: Alexandru Monahov <alexandru.monahov@proton.me>
 Repository: CRAN
-Date/Publication: 2024-04-22 23:00:04 UTC
+Date/Publication: 2024-08-17 23:40:02 UTC

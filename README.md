@@ -9,12 +9,14 @@ The package includes several weighting schemes which can be parameterized, as we
 Applying a weighting scheme to the confusion matrix can be useful in applications such as performance evaluation, where characteristics such as "underperforming", "acceptable", "overperforming" and "worker of the year" may represent gradations that are far apart and unevenly spaced. Similarly, where the objective is to classify geographic regions and proximity of the prediction to the actual region constitutes an advantage in terms of the model’s performance, applying a weighting scheme facilitates the model selection process.
 
 Functions are included to calculate accuracy metrics for imbalanced data. Specifically, the package
-allows users to compute the Starovoitov-Golub sine-accuracy function, as well as the Balanced Accuracy
-Function and the standard Accuracy indicator.
+allows users to compute the Starovoitov-Golub sine-accuracy function, as well as the balanced accuracy
+function and the standard accuracy indicator.
 
 ### [Paper (ResearchGate)](http://dx.doi.org/10.13140/RG.2.2.15992.83207)
 
-### v1.1.0
+### [Paper (SSRN)](http://dx.doi.org/10.2139/ssrn.4802336)
+
+### v1.2.0
 
 ## About wconf
 
@@ -76,6 +78,17 @@ _custom.weights_ – the vector of custom weights to be applied, is the custom w
 
 _print.weighted.accuracy_ – optional setting to print the weighted accuracy metric, which represents the sum of all weighted confusion matrix cells divided by the total number of observations.
 
+### rconfusionmatrix - compute a redistributed confusion matrix
+This function calculates the redistributed confusion matrix by reallocating observations classified in the vicinity of the true category to the confusion matrix diagonal, according to a user-specified weighting scheme which determines the proportion of observations to reassign.
+
+**rconfusionmatrix(_m_, _custom.weights_, _print.weighted.accuracy_)**
+
+_m_	–	the caret confusion matrix object or simple matrix.
+
+_custom.weights_ – the vector of custom weights to be applied. The vector should be equal to "n", but can be larger, with the first value and all excess values being ignored.
+
+_print.weighted.accuracy_ – optional setting to print the standard redistributed accuracy metric, which represents the sum of all observations on the diagonal divided by the total number of observations.
+
 ### balancedaccuracy - calculate accuracy scores for imbalanced data
 This function calculates classification accuracy scores using the sine-based
 formulas proposed by Starovoitov and Golub (2020). The advantage of the new
@@ -118,5 +131,5 @@ Once the package is installed, you can run it using the: **library(wconf)** comm
 
 ## Author details
 
-Alexandru Monahov, 2023
+Alexandru Monahov, 2024
 

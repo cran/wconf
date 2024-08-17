@@ -1,3 +1,15 @@
+# wconf 1.2.0
+
+New function: "rconfusionmatrix" - allows for a new way of calculating
+weighted accuracy metrics, by reallocating observations classified in the
+vicinity of the true category to the confusion matrix diagonal.
+
+Bugfix: The "wconfusionmatrix" weighting calculation is adjusted to fix a rare
+bug which would appear when selecting a specific set of weights.
+
+Improvements: Vignette updated to include additional examples and improvements
+in formatting and display of results.
+
 # wconf 1.1.0
 
 New function: "balancedaccuracy" - implements the Starovoitov-Golub sine-based

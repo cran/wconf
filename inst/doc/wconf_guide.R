@@ -37,11 +37,32 @@ wconfusionmatrix(confmat, weight.type = "arithmetic", print.weighted.accuracy = 
 
 ## ----echo=FALSE---------------------------------------------------------------
 mtx = t(matrix(
+  c(20, 0, 2, 1,
+    0, 34, 23, 7,
+    0, 0,  5, 3,
+    0, 0,  5, 1),
+  nrow = 4))
+mtx
+
+## -----------------------------------------------------------------------------
+rmtx = rconfusionmatrix(mtx, custom.weight = c(0, 0.5, 0.1, 0), print.weighted.accuracy = TRUE)
+rmtx
+
+## -----------------------------------------------------------------------------
+wmtx = wconfusionmatrix(mtx, weight.type = "custom", custom.weight = c(1, 0.5, 0.1, 0), print.weighted.accuracy = TRUE)
+wmtx
+
+## -----------------------------------------------------------------------------
+balancedaccuracy(rmtx)
+
+## ----echo=FALSE---------------------------------------------------------------
+mtx = t(matrix(
   c(50, 0, 118, 5,
     0,  1,  45, 27,
     0, 84,  22, 1,
     0, 22,  57, 4),
   nrow = 4))
+mtx
 
 ## -----------------------------------------------------------------------------
 balancedaccuracy(mtx)

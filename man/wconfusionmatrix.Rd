@@ -53,8 +53,8 @@ weighting scheme.}
 function. Higher values increase the rate of decay and place less weight on
 observations farther away from the correctly predicted category.}
 
-\item{custom.weights}{the vector of custom weight sto be applied, is the
-custom weighting scheme wasd selected. The vector should be equal to "n", but
+\item{custom.weights}{the vector of custom weight to be applied, if the
+custom weighting scheme was selected. The vector should be equal to "n", but
 can be larger, with excess values being ignored.}
 
 \item{print.weighted.accuracy}{print the weighted accuracy metric, which

@@ -42,8 +42,8 @@
 #' @param interval.low the lower bound of the weight interval, if the interval
 #' weighting scheme is used.
 #'
-#' @param custom.weights the vector of custom weight sto be applied, is the
-#' custom weighting scheme wasd selected. The vector should be equal to "n", but
+#' @param custom.weights the vector of custom weight to be applied, if the
+#' custom weighting scheme was selected. The vector should be equal to "n", but
 #' can be larger, with excess values being ignored.
 #'
 #' @param print.weighted.accuracy print the weighted accuracy metric, which
@@ -88,6 +88,7 @@ wconfusionmatrix <- function(m, weight.type = "arithmetic", weight.penalty = FAL
 
   if (is.matrix(m) == FALSE) {m = as.matrix(m)}
   n = length(m[,1])
+  cf = 0.123456789 # correction factor used to avoid weighting error due to assignment of weight value equal to the numbers used in the find-replace algorithm
 
   if (weight.type == "normal") {
   # Normal distribution
@@ -122,7 +123,7 @@ wconfusionmatrix <- function(m, weight.type = "arithmetic", weight.penalty = FAL
   else if (weight.type == "geometric") {
   # Geometric progression
   mult = geometric.multiplier
-  mat = (abs(outer(seq(0, (n-1), 1), seq(0, (n-1), 1), `-`)))+1
+  mat = (abs(outer(seq(0, (n-1), 1), seq(0, (n-1), 1), `-`)))+1+cf
   x=mult^seq(0,(n-1),by=1)
   x_n = (x-min(x))/(max(x)-min(x))
   if (mult > 1){
@@ -135,7 +136,7 @@ wconfusionmatrix <- function(m, weight.type = "arithmetic", weight.penalty = FAL
     stop("Please enter a multiplier value greater than zero.")
   }
   for (i in 1:n) {
-    mat[mat==i] = x_dict[i]
+    mat[mat==i+cf] = x_dict[i]
   }
   if (weight.penalty == TRUE) {
     mat = -(1-mat)
@@ -151,11 +152,11 @@ wconfusionmatrix <- function(m, weight.type = "arithmetic", weight.penalty = FAL
   else if (weight.type == "sin") {
     sin_hi = sin.high
     sin_lo = sin.low
-    mat = (abs(outer(seq(0, (n-1), 1), seq(0, (n-1), 1), `-`)))+1
+    mat = (abs(outer(seq(0, (n-1), 1), seq(0, (n-1), 1), `-`)))+1+cf
     mat_tmp = mat
     x = sin(seq(sin_lo, sin_hi, length.out = n))
     for (i in 1:n) {
-      mat[mat_tmp==i] = x[i]
+      mat[mat_tmp==i+cf] = x[i]
     }
     if (print.weighted.accuracy == TRUE) {
       waccuracy = sum(m*mat)/sum(m)
@@ -166,14 +167,14 @@ wconfusionmatrix <- function(m, weight.type = "arithmetic", weight.penalty = FAL
 
   else if (weight.type == "tanh") {
     tanh_decay = tanh.decay # higher values mean quicker decay (less weight placed on values far away from correct classification)
-    mat = (abs(outer(seq(0, (n-1), 1), seq(0, (n-1), 1), `-`)))+1
+    mat = (abs(outer(seq(0, (n-1), 1), seq(0, (n-1), 1), `-`)))+1+cf
     mat_tmp = mat
     x = 1-tanh(seq(0, tanh_decay, length.out = n))
     if (weight.penalty == TRUE) {
       x = tanh(seq(0, tanh_decay, length.out = n))
     }
     for (i in 1:n) {
-      mat[mat_tmp==i] = x[i]
+      mat[mat_tmp==i+cf] = x[i]
     }
     if (print.weighted.accuracy == TRUE) {
       waccuracy = sum(m*mat)/sum(m)
@@ -186,11 +187,11 @@ wconfusionmatrix <- function(m, weight.type = "arithmetic", weight.penalty = FAL
   # Interval weight
   hi = interval.high
   lo = interval.low
-  mat = (abs(outer(seq(0, (n-1), 1), seq(0, (n-1), 1), `-`)))+1
+  mat = (abs(outer(seq(0, (n-1), 1), seq(0, (n-1), 1), `-`)))+1+cf
   mat_tmp = mat
   x=seq(hi, lo, length.out = n)
   for (i in 1:n) {
-    mat[mat_tmp==i] = x[i]
+    mat[mat_tmp==i+cf] = x[i]
   }
   if (print.weighted.accuracy == TRUE) {
     waccuracy = sum(m*mat)/sum(m)
@@ -202,9 +203,9 @@ wconfusionmatrix <- function(m, weight.type = "arithmetic", weight.penalty = FAL
   else if (weight.type == "custom") {
   # Custom weights
   wt = custom.weights
-  mat = (abs(outer(seq(0, (n-1), 1), seq(0, (n-1), 1), `-`)))+1
+  mat = (abs(outer(seq(0, (n-1), 1), seq(0, (n-1), 1), `-`)))+1+cf
   for (i in 1:n) {
-    mat[mat==i] = wt[i]
+    mat[mat==i+cf] = wt[i]
   }
   if (print.weighted.accuracy == TRUE) {
     waccuracy = sum(m*mat)/sum(m)
